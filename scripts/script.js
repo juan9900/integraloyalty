@@ -5,11 +5,13 @@ const LL_API_SECRET =
   "YNi6kMyFSrvnXnvxTkD1yuwr8h0guY4jPdhJ5s0GiR6SdewR0YQovGu4hO8SunBv";
 const LL_USERNAME = "integraloyalty";
 // TODO: Cambiar TERMS_URL y URL_PROGRAM ycambiar el link del webhook en el post
-const TERMS_URL =
-  "https://api.loopyloyalty.com/v1/campaign/id/6QSNYV6zBQjruECI2XE5xD";
 
 let jwt = "";
-const URL_PROGRAM = "6QSNYV6zBQjruECI2XE5xD";
+const URL_PROGRAM = "3THRcXWUhNBG5AV23dzyAF";
+const TERMS_URL = `https://api.loopyloyalty.com/v1/campaign/id/${URL_PROGRAM}`;
+const URL_ENROLL = `https://api.loopyloyalty.com/v1/enrol/${URL_PROGRAM}`;
+const URL_CHECK = "https://hook.us1.make.com/dioijfkxy6k9setdwvf7ll3g7ys151t7";
+const URL_ADD = "https://hook.us1.make.com/6cujlc7ya1txr38pruio99k2xrnp5ukw";
 
 const termsContainer = document.getElementById("terms-container");
 const priceContainer = document.getElementById("price-container");
@@ -51,6 +53,7 @@ async function callWebhook(url = "", data = {}) {
       },
       body: JSON.stringify(data),
     });
+
     return response.json();
   } catch (e) {
     console.log(e);
@@ -110,6 +113,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   termsContainer.innerHTML = termsHTML;
 
   userForm.addEventListener("submit", (event) => {
+    console.log("submitted");
     event.preventDefault();
     // if the checkbox is not checked then display an error message and return
 
@@ -153,10 +157,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     jwt = generateJWT(LL_API_KEY, LL_API_SECRET, LL_USERNAME);
 
     //Check if the user is already registered
-    callWebhook(
-      "https://hook.eu1.make.com/5s6ln7rm77vnkoem2nul2tymcife2o35",
-      payload
-    )
+    callWebhook(URL_CHECK, payload)
       .then((data) => {
         const { isRegistered } = data;
         console.log(isRegistered);
@@ -166,11 +167,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
           throw new Error("User is already registered");
         } else {
-          enrollUser(
-            `https://api.loopyloyalty.com/v1/enrol/${URL_PROGRAM}`,
-            payload,
-            jwt
-          ).then((data) => {
+          console.log("no registrado");
+          enrollUser(URL_ENROLL, payload, jwt).then((data) => {
             console.log(data);
             if (data.error?.includes("is not valid")) {
               registeredContainer.innerText =
@@ -182,10 +180,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             const { pid, url: cardLink } = data;
             console.log({ pid, cardLink });
             const hookPayload = { ...payload, pid, cardLink };
-            addUser(
-              "https://hook.eu1.make.com/wn1tp3bz7yr5hsm1chur7o28z22br6lj",
-              hookPayload
-            ).then((data) => {
+            addUser(URL_ADD, hookPayload).then((data) => {
               console.log(data);
               // const { ok, url } = data;
               if (!data.ok) {
